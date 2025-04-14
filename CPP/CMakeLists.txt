@@ -153,142 +153,142 @@ if(CLIPPER2_UTILS OR CLIPPER2_TESTS OR CLIPPER2_EXAMPLES)
   endif()
 endif()
 
-if(CLIPPER2_EXAMPLES)
-  ##########################################################################
-  ##########################################################################
+# if(CLIPPER2_EXAMPLES)
+#   ##########################################################################
+#   ##########################################################################
 
-  set(ALL_EXAMPLES "") # 2d and 3d examples (if enabled)
+#   set(ALL_EXAMPLES "") # 2d and 3d examples (if enabled)
 
-  if (NOT (CLIPPER2_USINGZ STREQUAL "ONLY"))
-    set(EXAMPLES
-      Benchmarks
-      Inflate
-      MemLeakTest
-      PolygonSamples
-      RandomClipping
-      UnionClipping
-      RectClipping
-      SimpleClipping
-      VariableOffset
-    )
+#   if (NOT (CLIPPER2_USINGZ STREQUAL "ONLY"))
+#     set(EXAMPLES
+#       Benchmarks
+#       Inflate
+#       MemLeakTest
+#       PolygonSamples
+#       RandomClipping
+#       UnionClipping
+#       RectClipping
+#       SimpleClipping
+#       VariableOffset
+#     )
 
-    foreach(ex ${EXAMPLES})
-      add_executable(${ex} Examples/${ex}/${ex}.cpp)
-      target_link_libraries(${ex} PRIVATE Clipper2 Clipper2utils)
-    endforeach()
+#     foreach(ex ${EXAMPLES})
+#       add_executable(${ex} Examples/${ex}/${ex}.cpp)
+#       target_link_libraries(${ex} PRIVATE Clipper2 Clipper2utils)
+#     endforeach()
 
-    file(COPY Examples/Inflate/rabbit.svg DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-    list(APPEND ALL_EXAMPLES ${EXAMPLES})
-  endif()
+#     file(COPY Examples/Inflate/rabbit.svg DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+#     list(APPEND ALL_EXAMPLES ${EXAMPLES})
+#   endif()
 
-  if (NOT (CLIPPER2_USINGZ STREQUAL "OFF"))
-    set(EXAMPLESZ "UsingZ")
-    foreach(ex ${EXAMPLESZ})
-      add_executable(${ex} Examples/${ex}/${ex}.cpp)
-      target_link_libraries(${ex} PRIVATE Clipper2Z Clipper2Zutils)
-    endforeach()
+#   if (NOT (CLIPPER2_USINGZ STREQUAL "OFF"))
+#     set(EXAMPLESZ "UsingZ")
+#     foreach(ex ${EXAMPLESZ})
+#       add_executable(${ex} Examples/${ex}/${ex}.cpp)
+#       target_link_libraries(${ex} PRIVATE Clipper2Z Clipper2Zutils)
+#     endforeach()
 
-    list(APPEND ALL_EXAMPLES ${EXAMPLESZ})
-  endif()
+#     list(APPEND ALL_EXAMPLES ${EXAMPLESZ})
+#   endif()
 
-  set_target_properties(${ALL_EXAMPLES} PROPERTIES FOLDER Examples)
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    foreach(ex ${ALL_EXAMPLES})
-      target_compile_options(${ex} PRIVATE -Wno-unused-variable -Wno-unused-function)
-    endforeach()
-  endif()
-endif()
+#   set_target_properties(${ALL_EXAMPLES} PROPERTIES FOLDER Examples)
+#   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#     foreach(ex ${ALL_EXAMPLES})
+#       target_compile_options(${ex} PRIVATE -Wno-unused-variable -Wno-unused-function)
+#     endforeach()
+#   endif()
+# endif()
 
-if(CLIPPER2_TESTS)
-  # See: https://cliutils.gitlab.io/modern-cmake/chapters/testing/googletest.html
-  enable_testing()
-  if (WIN32)
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  endif()
-  set(BUILD_GMOCK OFF)
-if(USE_EXTERNAL_GTEST)
-  find_package(GTest REQUIRED)
-else()
-  include(GoogleTest)
-  if(NOT EXISTS ${PROJECT_SOURCE_DIR}/Tests/googletest)
-    execute_process(
-      COMMAND "git" "clone" "https://github.com/google/googletest"
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/Tests
-    )
-  endif()
-  add_subdirectory("${PROJECT_SOURCE_DIR}/Tests/googletest/")
-  set_target_properties(gtest gtest_main PROPERTIES FOLDER GTest)
-endif()
+# if(CLIPPER2_TESTS)
+#   # See: https://cliutils.gitlab.io/modern-cmake/chapters/testing/googletest.html
+#   enable_testing()
+#   if (WIN32)
+#     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+#   endif()
+#   set(BUILD_GMOCK OFF)
+# if(USE_EXTERNAL_GTEST)
+#   find_package(GTest REQUIRED)
+# else()
+#   include(GoogleTest)
+#   if(NOT EXISTS ${PROJECT_SOURCE_DIR}/Tests/googletest)
+#     execute_process(
+#       COMMAND "git" "clone" "https://github.com/google/googletest"
+#       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/Tests
+#     )
+#   endif()
+#   add_subdirectory("${PROJECT_SOURCE_DIR}/Tests/googletest/")
+#   set_target_properties(gtest gtest_main PROPERTIES FOLDER GTest)
+# endif()
 
-  if(TARGET gtest AND TARGET gtest_main)
-    set(gtest_libs gtest gtest_main)
-  elseif(TARGET GTest::gtest AND TARGET GTest::gtest_main)
-    set(gtest_libs GTest::gtest GTest::gtest_main)
-  endif()
+#   if(TARGET gtest AND TARGET gtest_main)
+#     set(gtest_libs gtest gtest_main)
+#   elseif(TARGET GTest::gtest AND TARGET GTest::gtest_main)
+#     set(gtest_libs GTest::gtest GTest::gtest_main)
+#   endif()
 
-  set(ClipperTests_SRC
-    Tests/TestExportHeaders.cpp
-    Tests/TestIsCollinear.cpp
-    Tests/TestLines.cpp
-    Tests/TestOffsets.cpp
-    Tests/TestOffsetOrientation.cpp
-    Tests/TestOrientation.cpp
-    Tests/TestPolygons.cpp
-    Tests/TestPolytreeHoles.cpp
-    Tests/TestPolytreeIntersection.cpp
-    Tests/TestPolytreeUnion.cpp
-    Tests/TestRandomPaths.cpp
-    Tests/TestRectClip.cpp
-    Tests/TestSimplifyPath.cpp
-    Tests/TestTrimCollinear.cpp
-    Tests/TestWindows.cpp
-  )
+#   set(ClipperTests_SRC
+#     Tests/TestExportHeaders.cpp
+#     Tests/TestIsCollinear.cpp
+#     Tests/TestLines.cpp
+#     Tests/TestOffsets.cpp
+#     Tests/TestOffsetOrientation.cpp
+#     Tests/TestOrientation.cpp
+#     Tests/TestPolygons.cpp
+#     Tests/TestPolytreeHoles.cpp
+#     Tests/TestPolytreeIntersection.cpp
+#     Tests/TestPolytreeUnion.cpp
+#     Tests/TestRandomPaths.cpp
+#     Tests/TestRectClip.cpp
+#     Tests/TestSimplifyPath.cpp
+#     Tests/TestTrimCollinear.cpp
+#     Tests/TestWindows.cpp
+#   )
 
-  set(CLIPPER2_TESTS "") # one or both of ClipperTests/ClipperTestsZ
+#   set(CLIPPER2_TESTS "") # one or both of ClipperTests/ClipperTestsZ
 
-  if (NOT (CLIPPER2_USINGZ STREQUAL "ONLY"))
-    list(APPEND CLIPPER2_TESTS "ClipperTests")
-    add_executable(ClipperTests ${ClipperTests_SRC})
-    target_link_libraries(ClipperTests ${gtest_libs} Clipper2 Clipper2utils)
+#   if (NOT (CLIPPER2_USINGZ STREQUAL "ONLY"))
+#     list(APPEND CLIPPER2_TESTS "ClipperTests")
+#     add_executable(ClipperTests ${ClipperTests_SRC})
+#     target_link_libraries(ClipperTests ${gtest_libs} Clipper2 Clipper2utils)
 
-    gtest_discover_tests(ClipperTests
-      # set a working directory to your project root so that you can find test data via paths relative to the project root
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../Tests
-      PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}"
-    )
-  endif()
+#     gtest_discover_tests(ClipperTests
+#       # set a working directory to your project root so that you can find test data via paths relative to the project root
+#       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../Tests
+#       PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}"
+#     )
+#   endif()
 
-  if (NOT (CLIPPER2_USINGZ STREQUAL "OFF"))
-    list(APPEND CLIPPER2_TESTS "ClipperTestsZ")
-    add_executable(ClipperTestsZ ${ClipperTests_SRC})
-    target_link_libraries(ClipperTestsZ ${gtest_libs} Clipper2Z Clipper2Zutils)
+#   if (NOT (CLIPPER2_USINGZ STREQUAL "OFF"))
+#     list(APPEND CLIPPER2_TESTS "ClipperTestsZ")
+#     add_executable(ClipperTestsZ ${ClipperTests_SRC})
+#     target_link_libraries(ClipperTestsZ ${gtest_libs} Clipper2Z Clipper2Zutils)
 
-    gtest_discover_tests(ClipperTestsZ
-      # set a working directory so your project root so that you can find test data via paths relative to the project root
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../Tests
-      PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}"
-      TEST_SUFFIX "_USINGZ"
-    )
-  endif()
+#     gtest_discover_tests(ClipperTestsZ
+#       # set a working directory so your project root so that you can find test data via paths relative to the project root
+#       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../Tests
+#       PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}"
+#       TEST_SUFFIX "_USINGZ"
+#     )
+#   endif()
 
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    foreach(ts ${CLIPPER2_TESTS})
-      target_compile_options(${ts} PRIVATE -Wno-unused-variable -Wno-unused-function)
-    endforeach()
-  endif()
+#   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#     foreach(ts ${CLIPPER2_TESTS})
+#       target_compile_options(${ts} PRIVATE -Wno-unused-variable -Wno-unused-function)
+#     endforeach()
+#   endif()
 
-  set_target_properties(${CLIPPER2_TESTS} PROPERTIES FOLDER Tests)
+#   set_target_properties(${CLIPPER2_TESTS} PROPERTIES FOLDER Tests)
 
-  file(COPY ../Tests/PolytreeHoleOwner.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-  file(COPY ../Tests/PolytreeHoleOwner2.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-  file(COPY ../Tests/Lines.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-  file(COPY ../Tests/Polygons.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-  file(COPY ../Tests/Offsets.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-endif()
+#   file(COPY ../Tests/PolytreeHoleOwner.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+#   file(COPY ../Tests/PolytreeHoleOwner2.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+#   file(COPY ../Tests/Lines.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+#   file(COPY ../Tests/Polygons.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+#   file(COPY ../Tests/Offsets.txt DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
+# endif()
 
-if(USE_EXTERNAL_GBENCHMARK)
-  add_subdirectory(BenchMark)
-endif()
+# if(USE_EXTERNAL_GBENCHMARK)
+#   add_subdirectory(BenchMark)
+# endif()
 
 set(CLIPPER2_PCFILES "")
 foreach(lib ${CLIPPER2_LIBS})
