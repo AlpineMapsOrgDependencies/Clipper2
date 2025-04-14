@@ -31,6 +31,15 @@ namespace Clipper2Lib
     OutPt2* prev = nullptr;
   };
 
+  template <typename T>
+  struct BoundedPath {
+      Path<T> path;
+      Rect<T> bound;
+  };
+
+  using BoundedPath64 = BoundedPath<int64_t>;
+  using BoundedPaths64 = std::vector<BoundedPath64>;
+
   //------------------------------------------------------------------------------
   // RectClip64
   //------------------------------------------------------------------------------
@@ -60,6 +69,7 @@ namespace Clipper2Lib
       rect_(rect),
       rect_as_path_(rect.AsPath()),
       rect_mp_(rect.MidPoint()) {}
+    Paths64 Execute(const BoundedPaths64& paths);
     Paths64 Execute(const Paths64& paths);
   };
 

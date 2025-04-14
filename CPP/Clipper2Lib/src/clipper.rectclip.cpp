@@ -870,6 +870,45 @@ namespace Clipper2Lib {
     return result;
   }
 
+  Paths64 RectClip64::Execute(const BoundedPaths64& boundedPaths)
+  {
+      Paths64 result;
+      if (rect_.IsEmpty())
+          return result;
+
+      for (const BoundedPath64& boundedPath : boundedPaths) {
+          if (boundedPath.path.size() < 3)
+              continue;
+          if (!rect_.Intersects(boundedPath.bound))
+              continue; // the path must be completely outside rect_
+          else if (rect_.Contains(boundedPath.bound)) {
+              // the path must be completely inside rect_
+              result.emplace_back(boundedPath.path);
+              continue;
+          }
+          path_bounds_ = boundedPath.bound;
+
+          ExecuteInternal(boundedPath.path);
+          CheckEdges();
+          for (size_t i = 0; i < 4; ++i)
+              TidyEdges(i, edges_[i * 2], edges_[i * 2 + 1]);
+
+          for (OutPt2*& op : results_) {
+              Path64 tmp = GetPath(op);
+              if (!tmp.empty())
+                  result.emplace_back(std::move(tmp));
+          }
+
+          // clean up after every loop
+          op_container_ = std::deque<OutPt2>();
+          results_.clear();
+          for (OutPt2List& edge : edges_)
+              edge.clear();
+          start_locs_.clear();
+      }
+      return result;
+  }
+
   Paths64 RectClip64::Execute(const Paths64& paths)
   {
     Paths64 result;
