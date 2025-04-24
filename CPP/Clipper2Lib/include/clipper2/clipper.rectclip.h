@@ -69,7 +69,8 @@ namespace Clipper2Lib
       rect_(rect),
       rect_as_path_(rect.AsPath()),
       rect_mp_(rect.MidPoint()) {}
-    Paths64 Execute(const BoundedPaths64& paths);
+    // Paths64 Execute(const BoundedPaths64& paths);
+    Paths64 Execute(const Paths64& paths, const std::vector<Rect64>& bounds);
     Paths64 Execute(const Paths64& paths);
   };
 
