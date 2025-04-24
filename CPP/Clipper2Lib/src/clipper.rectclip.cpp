@@ -894,8 +894,8 @@ namespace Clipper2Lib {
 
           ExecuteInternal(paths[i]);
           CheckEdges();
-          for (size_t i = 0; i < 4; ++i)
-              TidyEdges(i, edges_[i * 2], edges_[i * 2 + 1]);
+          for (size_t j = 0; j < 4; ++j)
+              TidyEdges(j, edges_[j * 2], edges_[j * 2 + 1]);
 
           for (OutPt2*& op : results_) {
               Path64 tmp = GetPath(op);
