@@ -168,6 +168,8 @@ namespace Clipper2Lib {
     return result;
   }
 
+  inline Path<int16_t> TranslatePath(const Path<int16_t>& path, int16_t dx, int16_t dy) { return TranslatePath<int16_t>(path, dx, dy); }
+
   inline Path64 TranslatePath(const Path64& path, int64_t dx, int64_t dy)
   {
     return TranslatePath<int64_t>(path, dx, dy);
@@ -188,6 +190,8 @@ namespace Clipper2Lib {
     return result;
   }
 
+  inline Paths<int16_t> TranslatePaths(const Paths<int16_t>& paths, int16_t dx, int16_t dy) { return TranslatePaths<int16_t>(paths, dx, dy); }
+
   inline Paths64 TranslatePaths(const Paths64& paths, int64_t dx, int64_t dy)
   {
     return TranslatePaths<int64_t>(paths, dx, dy);
@@ -198,21 +202,25 @@ namespace Clipper2Lib {
     return TranslatePaths<double>(paths, dx, dy);
   }
 
-  inline Paths64 RectClip(const Rect64& rect, const Paths64& paths)
+  template <typename T>
+  inline Paths<T> RectClipFunc(const Rect<T>& rect, const Paths<T>& paths)
   {
-    if (rect.IsEmpty() || paths.empty()) return Paths64();
-    RectClip64 rc(rect);
-    return rc.Execute(paths);
+      if (rect.IsEmpty() || paths.empty())
+          return Paths<T>();
+      RectClip<T> rc(rect);
+      return rc.Execute(paths);
   }
 
-  inline Paths64 RectClip(const Rect64& rect, const Path64& path)
+  template <typename T>
+  inline Paths<T> RectClipFunc(const Rect<T>& rect, const Path<T>& path)
   {
-    if (rect.IsEmpty() || path.empty()) return Paths64();
-    RectClip64 rc(rect);
-    return rc.Execute(Paths64{ path });
+      if (rect.IsEmpty() || path.empty())
+          return Paths<T>();
+      RectClip<T> rc(rect);
+      return rc.Execute(Paths<T> { path });
   }
 
-  inline PathsD RectClip(const RectD& rect, const PathsD& paths, int precision = 2)
+  inline PathsD RectClipD(const RectD& rect, const PathsD& paths, int precision = 2)
   {
     if (rect.IsEmpty() || paths.empty()) return PathsD();
     int error_code = 0;
@@ -220,31 +228,31 @@ namespace Clipper2Lib {
     if (error_code) return PathsD();
     const double scale = std::pow(10, precision);
     Rect64 r = ScaleRect<int64_t, double>(rect, scale);
-    RectClip64 rc(r);
+    RectClip<int64_t> rc(r);
     Paths64 pp = ScalePaths<int64_t, double>(paths, scale, error_code);
     if (error_code) return PathsD(); // ie: error_code result is lost
     return ScalePaths<double, int64_t>(
       rc.Execute(pp), 1 / scale, error_code);
   }
 
-  inline PathsD RectClip(const RectD& rect, const PathD& path, int precision = 2)
+  inline PathsD RectClipD(const RectD& rect, const PathD& path, int precision = 2) { return RectClipD(rect, PathsD { path }, precision); }
+
+  template <typename T>
+  inline Paths<T> RectClipLinesFunc(const Rect<T>& rect, const Paths<T>& lines)
   {
-    return RectClip(rect, PathsD{ path }, precision);
+      if (rect.IsEmpty() || lines.empty())
+          return Paths<T>();
+      RectClipLines<T> rcl(rect);
+      return rcl.Execute(lines);
   }
 
-  inline Paths64 RectClipLines(const Rect64& rect, const Paths64& lines)
+  template <typename T>
+  inline Paths<T> RectClipLinesFunc(const Rect<T>& rect, const Path<T>& line)
   {
-    if (rect.IsEmpty() || lines.empty()) return Paths64();
-    RectClipLines64 rcl(rect);
-    return rcl.Execute(lines);
+      return RectClipLines(rect, Paths<T> { line });
   }
 
-  inline Paths64 RectClipLines(const Rect64& rect, const Path64& line)
-  {
-    return RectClipLines(rect, Paths64{ line });
-  }
-
-  inline PathsD RectClipLines(const RectD& rect, const PathsD& lines, int precision = 2)
+  inline PathsD RectClipLinesD(const RectD& rect, const PathsD& lines, int precision = 2)
   {
     if (rect.IsEmpty() || lines.empty()) return PathsD();
     int error_code = 0;
@@ -252,17 +260,14 @@ namespace Clipper2Lib {
     if (error_code) return PathsD();
     const double scale = std::pow(10, precision);
     Rect64 r = ScaleRect<int64_t, double>(rect, scale);
-    RectClipLines64 rcl(r);
+    RectClipLines<int64_t> rcl(r);
     Paths64 p = ScalePaths<int64_t, double>(lines, scale, error_code);
     if (error_code) return PathsD();
     p = rcl.Execute(p);
     return ScalePaths<double, int64_t>(p, 1 / scale, error_code);
   }
 
-  inline PathsD RectClipLines(const RectD& rect, const PathD& line, int precision = 2)
-  {
-    return RectClipLines(rect, PathsD{ line }, precision);
-  }
+  inline PathsD RectClipLinesD(const RectD& rect, const PathD& line, int precision = 2) { return RectClipLinesD(rect, PathsD { line }, precision); }
 
   namespace details
   {
@@ -401,31 +406,23 @@ namespace Clipper2Lib {
     return true;
   }
 
-  template<typename T,
-    typename std::enable_if<
-      std::is_integral<T>::value &&
-      !std::is_same<char, T>::value, bool
-    >::type = true>
-  inline Path64 MakePath(const std::vector<T>& list)
+  template <typename T, typename std::enable_if<std::is_integral<T>::value && !std::is_same<char, T>::value, bool>::type = true>
+  inline Path<T> MakePath(const std::vector<T>& list)
   {
     const auto size = list.size() - list.size() % 2;
     if (list.size() != size)
       DoError(non_pair_error_i);  // non-fatal without exception handling
-    Path64 result;
+    Path<T> result;
     details::MakePathGeneric(list, size, result);
     return result;
   }
 
-  template<typename T, std::size_t N,
-    typename std::enable_if<
-      std::is_integral<T>::value &&
-      !std::is_same<char, T>::value, bool
-    >::type = true>
-  inline Path64 MakePath(const T(&list)[N])
+  template <typename T, std::size_t N, typename std::enable_if<std::is_integral<T>::value && !std::is_same<char, T>::value, bool>::type = true>
+  inline Path<T> MakePath(const T (&list)[N])
   {
     // Make the compiler error on unpaired value (i.e. no runtime effects).
     static_assert(N % 2 == 0, "MakePath requires an even number of arguments");
-    Path64 result;
+    Path<T> result;
     details::MakePathGeneric(list, N, result);
     return result;
   }

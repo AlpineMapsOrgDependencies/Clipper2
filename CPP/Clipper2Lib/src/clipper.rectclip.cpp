@@ -16,27 +16,32 @@ namespace Clipper2Lib {
   // Miscellaneous methods
   //------------------------------------------------------------------------------
 
-  inline bool Path1ContainsPath2(const Path64& path1, const Path64& path2)
-  {
+template <typename T>
+inline bool Path1ContainsPath2(const Path<T>& path1, const Path<T>& path2)
+{
     int io_count = 0;
     // precondition: no (significant) overlap
-    for (const Point64& pt : path2)
-    {
-      PointInPolygonResult pip = PointInPolygon(pt, path1);
-      switch (pip)
-      {
-      case PointInPolygonResult::IsOutside: ++io_count; break;
-      case PointInPolygonResult::IsInside: --io_count; break;
-      default: continue;
-      }
-      if (std::abs(io_count) > 1) break;
+    for (const Point<T>& pt : path2) {
+        PointInPolygonResult pip = PointInPolygon(pt, path1);
+        switch (pip) {
+        case PointInPolygonResult::IsOutside:
+            ++io_count;
+            break;
+        case PointInPolygonResult::IsInside:
+            --io_count;
+            break;
+        default:
+            continue;
+        }
+        if (std::abs(io_count) > 1)
+            break;
     }
     return io_count <= 0;
-  }
+}
 
-  inline bool GetLocation(const Rect64& rec,
-    const Point64& pt, Location& loc)
-  {
+template <typename T>
+inline bool GetLocation(const Rect<T>& rec, const Point<T>& pt, Location& loc)
+{
     if (pt.x == rec.left && pt.y >= rec.top && pt.y <= rec.bottom)
     {
       loc = Location::Left;
@@ -63,16 +68,17 @@ namespace Clipper2Lib {
     else if (pt.y > rec.bottom) loc = Location::Bottom;
     else loc = Location::Inside;
     return true;
-  }
+}
 
-  inline bool IsHorizontal(const Point64& pt1, const Point64& pt2)
-  {
+template <typename T>
+inline bool IsHorizontal(const Point<T>& pt1, const Point<T>& pt2)
+{
     return pt1.y == pt2.y;
-  }
+}
 
-  bool GetSegmentIntersection(const Point64& p1,
-    const Point64& p2, const Point64& p3, const Point64& p4, Point64& ip)
-  {
+template <typename T>
+bool GetSegmentIntersection(const Point<T>& p1, const Point<T>& p2, const Point<T>& p3, const Point<T>& p4, Point<T>& ip)
+{
     double res1 = CrossProduct(p1, p3, p4);
     double res2 = CrossProduct(p2, p3, p4);
     if (res1 == 0)
@@ -113,11 +119,10 @@ namespace Clipper2Lib {
 
     // segments must intersect to get here
     return GetSegmentIntersectPt(p1, p2, p3, p4, ip);
-  }
-
-  inline bool GetIntersection(const Path64& rectPath,
-    const Point64& p, const Point64& p2, Location& loc, Point64& ip)
-  {
+}
+template <typename T>
+inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Point<T>& p2, Location& loc, Point<T>& ip)
+{
     // gets the intersection closest to 'p'
     // when Result = false, loc will remain unchanged
     switch (loc)
@@ -201,7 +206,7 @@ namespace Clipper2Lib {
       }
       else return false;
     }
-  }
+}
 
   inline Location GetAdjacentLocation(Location loc, bool isClockwise)
   {
@@ -219,8 +224,8 @@ namespace Clipper2Lib {
     return abs(static_cast<int>(prev) - static_cast<int>(curr)) == 2;
   }
 
-  inline bool IsClockwise(Location prev, Location curr,
-    const Point64& prev_pt, const Point64& curr_pt, const Point64& rect_mp)
+  template <typename T>
+  inline bool IsClockwise(Location prev, Location curr, const Point<T>& prev_pt, const Point<T>& curr_pt, const Point<T>& rect_mp)
   {
     if (AreOpposites(prev, curr))
       return CrossProduct(prev_pt, rect_mp, curr_pt) < 0;
@@ -228,7 +233,8 @@ namespace Clipper2Lib {
       return HeadingClockwise(prev, curr);
   }
 
-  inline OutPt2* UnlinkOp(OutPt2* op)
+  template <typename T>
+  inline OutPt2<T>* UnlinkOp(OutPt2<T>* op)
   {
     if (op->next == op) return nullptr;
     op->prev->next = op->next;
@@ -236,7 +242,8 @@ namespace Clipper2Lib {
     return op->next;
   }
 
-  inline OutPt2* UnlinkOpBack(OutPt2* op)
+  template <typename T>
+  inline OutPt2<T>* UnlinkOpBack(OutPt2<T>* op)
   {
     if (op->next == op) return nullptr;
     op->prev->next = op->next;
@@ -244,7 +251,8 @@ namespace Clipper2Lib {
     return op->prev;
   }
 
-  inline uint32_t GetEdgesForPt(const Point64& pt, const Rect64& rec)
+  template <typename T>
+  inline uint32_t GetEdgesForPt(const Point<T>& pt, const Rect<T>& rec)
   {
     uint32_t result = 0;
     if (pt.x == rec.left) result = 1;
@@ -254,7 +262,8 @@ namespace Clipper2Lib {
     return result;
   }
 
-  inline bool IsHeadingClockwise(const Point64& pt1, const Point64& pt2, int edgeIdx)
+  template <typename T>
+  inline bool IsHeadingClockwise(const Point<T>& pt1, const Point<T>& pt2, int edgeIdx)
   {
     switch (edgeIdx)
     {
@@ -265,44 +274,46 @@ namespace Clipper2Lib {
     }
   }
 
-  inline bool HasHorzOverlap(const Point64& left1, const Point64& right1,
-    const Point64& left2, const Point64& right2)
+  template <typename T>
+  inline bool HasHorzOverlap(const Point<T>& left1, const Point<T>& right1, const Point<T>& left2, const Point<T>& right2)
   {
     return (left1.x < right2.x) && (right1.x > left2.x);
   }
 
-  inline bool HasVertOverlap(const Point64& top1, const Point64& bottom1,
-    const Point64& top2, const Point64& bottom2)
+  template <typename T>
+  inline bool HasVertOverlap(const Point<T>& top1, const Point<T>& bottom1, const Point<T>& top2, const Point<T>& bottom2)
   {
     return (top1.y < bottom2.y) && (bottom1.y > top2.y);
   }
 
-  inline void AddToEdge(OutPt2List& edge, OutPt2* op)
+  template <typename T>
+  inline void AddToEdge(OutPt2List<T>& edge, OutPt2<T>* op)
   {
     if (op->edge) return;
     op->edge = &edge;
     edge.emplace_back(op);
   }
 
-  inline void UncoupleEdge(OutPt2* op)
+  template <typename T>
+  inline void UncoupleEdge(OutPt2<T>* op)
   {
     if (!op->edge) return;
     for (size_t i = 0; i < op->edge->size(); ++i)
     {
-      OutPt2* op2 = (*op->edge)[i];
-      if (op2 == op)
-      {
-        (*op->edge)[i] = nullptr;
-        break;
-      }
+        OutPt2<T>* op2 = (*op->edge)[i];
+        if (op2 == op) {
+            (*op->edge)[i] = nullptr;
+            break;
+        }
     }
     op->edge = nullptr;
   }
 
-  inline void SetNewOwner(OutPt2* op, size_t new_idx)
+  template <typename T>
+  inline void SetNewOwner(OutPt2<T>* op, size_t new_idx)
   {
     op->owner_idx = new_idx;
-    OutPt2* op2 = op->next;
+    OutPt2<T>* op2 = op->next;
     while (op2 != op)
     {
       op2->owner_idx = new_idx;
@@ -311,30 +322,32 @@ namespace Clipper2Lib {
   }
 
   //----------------------------------------------------------------------------
-  // RectClip64
+  // RectClip<T>
   //----------------------------------------------------------------------------
 
-  OutPt2* RectClip64::Add(Point64 pt, bool start_new)
+  template <typename T>
+  OutPt2<T>* RectClip<T>::Add(Point<T> pt, bool start_new)
   {
     // this method is only called by InternalExecute.
     // Later splitting & rejoining won't create additional op's,
     // though they will change the (non-storage) results_ count.
     size_t curr_idx = results_.size();
-    OutPt2* result;
+    // TODO change size_t to uint
+    OutPt2<T>* result;
     if (curr_idx == 0 || start_new)
     {
-      result = &op_container_.emplace_back(OutPt2());
-      result->pt = pt;
-      result->next = result;
-      result->prev = result;
-      results_.emplace_back(result);
+        result = &op_container_.emplace_back(OutPt2<T>());
+        result->pt = pt;
+        result->next = result;
+        result->prev = result;
+        results_.emplace_back(result);
     }
     else
     {
       --curr_idx;
-      OutPt2* prevOp = results_[curr_idx];
+      OutPt2<T>* prevOp = results_[curr_idx];
       if (prevOp->pt == pt)  return prevOp;
-      result = &op_container_.emplace_back(OutPt2());
+      result = &op_container_.emplace_back(OutPt2<T>());
       result->owner_idx = curr_idx;
       result->pt = pt;
       result->next = prevOp->next;
@@ -346,7 +359,8 @@ namespace Clipper2Lib {
     return result;
   }
 
-  void RectClip64::AddCorner(Location prev, Location curr)
+  template <typename T>
+  void RectClip<T>::AddCorner(Location prev, Location curr)
   {
     if (HeadingClockwise(prev, curr))
       Add(rect_as_path_[static_cast<size_t>(prev)]);
@@ -354,7 +368,8 @@ namespace Clipper2Lib {
       Add(rect_as_path_[static_cast<size_t>(curr)]);
   }
 
-  void RectClip64::AddCorner(Location& loc, bool isClockwise)
+  template <typename T>
+  void RectClip<T>::AddCorner(Location& loc, bool isClockwise)
   {
     if (isClockwise)
     {
@@ -368,8 +383,8 @@ namespace Clipper2Lib {
     }
   }
 
-  void RectClip64::GetNextLocation(const Path64& path,
-    Location& loc, size_t& i, size_t highI)
+  template <typename T>
+  void RectClip<T>::GetNextLocation(const Path<T>& path, Location& loc, size_t& i, size_t highI)
   {
     switch (loc)
     {
@@ -440,7 +455,8 @@ namespace Clipper2Lib {
     return result > 0;
   }
 
-  void RectClip64::ExecuteInternal(const Path64& path)
+  template <typename T>
+  void RectClip<T>::ExecuteInternal(const Path<T>& path)
   {
     if (path.size() < 1)
       return;
@@ -474,10 +490,8 @@ namespace Clipper2Lib {
       GetNextLocation(path, loc, i, highI);
 
       if (i > highI) break;
-      Point64 ip, ip2;
-      Point64 prev_pt = (i) ?
-        path[static_cast<size_t>(i - 1)] :
-        path[highI];
+      Point<T> ip, ip2;
+      Point<T> prev_pt = (i) ? path[static_cast<size_t>(i - 1)] : path[highI];
 
       crossing_loc = loc;
       if (!GetIntersection(rect_as_path_,
@@ -603,32 +617,30 @@ namespace Clipper2Lib {
     }
   }
 
-  void RectClip64::CheckEdges()
+  template <typename T>
+  void RectClip<T>::CheckEdges()
   {
     for (size_t i = 0; i < results_.size(); ++i)
     {
-      OutPt2* op = results_[i];
-      if (!op) continue;
-      OutPt2* op2 = op;
-      do
-      {
-        if (IsCollinear(op2->prev->pt, op2->pt, op2->next->pt))
-        {
-          if (op2 == op)
-          {
-            op2 = UnlinkOpBack(op2);
-            if (!op2) break;
-            op = op2->prev;
-          }
-          else
-          {
-            op2 = UnlinkOpBack(op2);
-            if (!op2) break;
-          }
-        }
-        else
-          op2 = op2->next;
-      } while (op2 != op);
+        OutPt2<T>* op = results_[i];
+        if (!op)
+            continue;
+        OutPt2<T>* op2 = op;
+        do {
+            if (IsCollinear(op2->prev->pt, op2->pt, op2->next->pt)) {
+                if (op2 == op) {
+                    op2 = UnlinkOpBack(op2);
+                    if (!op2)
+                        break;
+                    op = op2->prev;
+                } else {
+                    op2 = UnlinkOpBack(op2);
+                    if (!op2)
+                        break;
+                }
+            } else
+                op2 = op2->next;
+        } while (op2 != op);
 
       if (!op2)
       {
@@ -662,204 +674,170 @@ namespace Clipper2Lib {
     }
   }
 
-  void RectClip64::TidyEdges(size_t idx, OutPt2List& cw, OutPt2List& ccw)
+  template <typename T>
+  void RectClip<T>::TidyEdges(size_t idx, OutPt2List<T>& cw, OutPt2List<T>& ccw)
   {
-    if (ccw.empty()) return;
-    bool isHorz = ((idx == 1) || (idx == 3));
-    bool cwIsTowardLarger = ((idx == 1) || (idx == 2));
-    size_t i = 0, j = 0;
-    OutPt2* p1, * p2, * p1a, * p2a, * op, * op2;
+      if (ccw.empty())
+          return;
+      bool isHorz = ((idx == 1) || (idx == 3));
+      bool cwIsTowardLarger = ((idx == 1) || (idx == 2));
+      size_t i = 0, j = 0;
+      OutPt2<T>*p1, *p2, *p1a, *p2a, *op, *op2;
 
-    while (i < cw.size())
-    {
-      p1 = cw[i];
-      if (!p1 || p1->next == p1->prev)
-      {
-        cw[i++] = nullptr;
-        j = 0;
-        continue;
-      }
+      while (i < cw.size()) {
+          p1 = cw[i];
+          if (!p1 || p1->next == p1->prev) {
+              cw[i++] = nullptr;
+              j = 0;
+              continue;
+          }
 
-      size_t jLim = ccw.size();
-      while (j < jLim &&
-        (!ccw[j] || ccw[j]->next == ccw[j]->prev)) ++j;
+          size_t jLim = ccw.size();
+          while (j < jLim && (!ccw[j] || ccw[j]->next == ccw[j]->prev))
+              ++j;
 
-      if (j == jLim)
-      {
-        ++i;
-        j = 0;
-        continue;
-      }
+          if (j == jLim) {
+              ++i;
+              j = 0;
+              continue;
+          }
 
-      if (cwIsTowardLarger)
-      {
-        // p1 >>>> p1a;
-        // p2 <<<< p2a;
-        p1 = cw[i]->prev;
-        p1a = cw[i];
-        p2 = ccw[j];
-        p2a = ccw[j]->prev;
-      }
-      else
-      {
-        // p1 <<<< p1a;
-        // p2 >>>> p2a;
-        p1 = cw[i];
-        p1a = cw[i]->prev;
-        p2 = ccw[j]->prev;
-        p2a = ccw[j];
-      }
+          if (cwIsTowardLarger) {
+              // p1 >>>> p1a;
+              // p2 <<<< p2a;
+              p1 = cw[i]->prev;
+              p1a = cw[i];
+              p2 = ccw[j];
+              p2a = ccw[j]->prev;
+          } else {
+              // p1 <<<< p1a;
+              // p2 >>>> p2a;
+              p1 = cw[i];
+              p1a = cw[i]->prev;
+              p2 = ccw[j]->prev;
+              p2a = ccw[j];
+          }
 
-      if ((isHorz && !HasHorzOverlap(p1->pt, p1a->pt, p2->pt, p2a->pt)) ||
-        (!isHorz && !HasVertOverlap(p1->pt, p1a->pt, p2->pt, p2a->pt)))
-      {
-        ++j;
-        continue;
-      }
+          if ((isHorz && !HasHorzOverlap(p1->pt, p1a->pt, p2->pt, p2a->pt)) || (!isHorz && !HasVertOverlap(p1->pt, p1a->pt, p2->pt, p2a->pt))) {
+              ++j;
+              continue;
+          }
 
-      // to get here we're either splitting or rejoining
-      bool isRejoining = cw[i]->owner_idx != ccw[j]->owner_idx;
+          // to get here we're either splitting or rejoining
+          bool isRejoining = cw[i]->owner_idx != ccw[j]->owner_idx;
 
-      if (isRejoining)
-      {
-        results_[p2->owner_idx] = nullptr;
-        SetNewOwner(p2, p1->owner_idx);
-      }
+          if (isRejoining) {
+              results_[p2->owner_idx] = nullptr;
+              SetNewOwner(p2, p1->owner_idx);
+          }
 
-      // do the split or re-join
-      if (cwIsTowardLarger)
-      {
-        // p1 >> | >> p1a;
-        // p2 << | << p2a;
-        p1->next = p2;
-        p2->prev = p1;
-        p1a->prev = p2a;
-        p2a->next = p1a;
-      }
-      else
-      {
-        // p1 << | << p1a;
-        // p2 >> | >> p2a;
-        p1->prev = p2;
-        p2->next = p1;
-        p1a->next = p2a;
-        p2a->prev = p1a;
-      }
+          // do the split or re-join
+          if (cwIsTowardLarger) {
+              // p1 >> | >> p1a;
+              // p2 << | << p2a;
+              p1->next = p2;
+              p2->prev = p1;
+              p1a->prev = p2a;
+              p2a->next = p1a;
+          } else {
+              // p1 << | << p1a;
+              // p2 >> | >> p2a;
+              p1->prev = p2;
+              p2->next = p1;
+              p1a->next = p2a;
+              p2a->prev = p1a;
+          }
 
-      if (!isRejoining)
-      {
-        size_t new_idx = results_.size();
-        results_.emplace_back(p1a);
-        SetNewOwner(p1a, new_idx);
-      }
+          if (!isRejoining) {
+              size_t new_idx = results_.size();
+              results_.emplace_back(p1a);
+              SetNewOwner(p1a, new_idx);
+          }
 
-      if (cwIsTowardLarger)
-      {
-        op = p2;
-        op2 = p1a;
-      }
-      else
-      {
-        op = p1;
-        op2 = p2a;
-      }
-      results_[op->owner_idx] = op;
-      results_[op2->owner_idx] = op2;
+          if (cwIsTowardLarger) {
+              op = p2;
+              op2 = p1a;
+          } else {
+              op = p1;
+              op2 = p2a;
+          }
+          results_[op->owner_idx] = op;
+          results_[op2->owner_idx] = op2;
 
-      // and now lots of work to get ready for the next loop
+          // and now lots of work to get ready for the next loop
 
-      bool opIsLarger, op2IsLarger;
-      if (isHorz) // X
-      {
-        opIsLarger = op->pt.x > op->prev->pt.x;
-        op2IsLarger = op2->pt.x > op2->prev->pt.x;
-      }
-      else       // Y
-      {
-        opIsLarger = op->pt.y > op->prev->pt.y;
-        op2IsLarger = op2->pt.y > op2->prev->pt.y;
-      }
+          bool opIsLarger, op2IsLarger;
+          if (isHorz) // X
+          {
+              opIsLarger = op->pt.x > op->prev->pt.x;
+              op2IsLarger = op2->pt.x > op2->prev->pt.x;
+          } else // Y
+          {
+              opIsLarger = op->pt.y > op->prev->pt.y;
+              op2IsLarger = op2->pt.y > op2->prev->pt.y;
+          }
 
-      if ((op->next == op->prev) ||
-        (op->pt == op->prev->pt))
-      {
-        if (op2IsLarger == cwIsTowardLarger)
-        {
-          cw[i] = op2;
-          ccw[j++] = nullptr;
-        }
-        else
-        {
-          ccw[j] = op2;
-          cw[i++] = nullptr;
-        }
+          if ((op->next == op->prev) || (op->pt == op->prev->pt)) {
+              if (op2IsLarger == cwIsTowardLarger) {
+                  cw[i] = op2;
+                  ccw[j++] = nullptr;
+              } else {
+                  ccw[j] = op2;
+                  cw[i++] = nullptr;
+              }
+          } else if ((op2->next == op2->prev) || (op2->pt == op2->prev->pt)) {
+              if (opIsLarger == cwIsTowardLarger) {
+                  cw[i] = op;
+                  ccw[j++] = nullptr;
+              } else {
+                  ccw[j] = op;
+                  cw[i++] = nullptr;
+              }
+          } else if (opIsLarger == op2IsLarger) {
+              if (opIsLarger == cwIsTowardLarger) {
+                  cw[i] = op;
+                  UncoupleEdge(op2);
+                  AddToEdge(cw, op2);
+                  ccw[j++] = nullptr;
+              } else {
+                  cw[i++] = nullptr;
+                  ccw[j] = op2;
+                  UncoupleEdge(op);
+                  AddToEdge(ccw, op);
+                  j = 0;
+              }
+          } else {
+              if (opIsLarger == cwIsTowardLarger)
+                  cw[i] = op;
+              else
+                  ccw[j] = op;
+              if (op2IsLarger == cwIsTowardLarger)
+                  cw[i] = op2;
+              else
+                  ccw[j] = op2;
+          }
       }
-      else if ((op2->next == op2->prev) ||
-        (op2->pt == op2->prev->pt))
-      {
-        if (opIsLarger == cwIsTowardLarger)
-        {
-          cw[i] = op;
-          ccw[j++] = nullptr;
-        }
-        else
-        {
-          ccw[j] = op;
-          cw[i++] = nullptr;
-        }
-      }
-      else if (opIsLarger == op2IsLarger)
-      {
-        if (opIsLarger == cwIsTowardLarger)
-        {
-          cw[i] = op;
-          UncoupleEdge(op2);
-          AddToEdge(cw, op2);
-          ccw[j++] = nullptr;
-        }
-        else
-        {
-          cw[i++] = nullptr;
-          ccw[j] = op2;
-          UncoupleEdge(op);
-          AddToEdge(ccw, op);
-          j = 0;
-        }
-      }
-      else
-      {
-        if (opIsLarger == cwIsTowardLarger)
-          cw[i] = op;
-        else
-          ccw[j] = op;
-        if (op2IsLarger == cwIsTowardLarger)
-          cw[i] = op2;
-        else
-          ccw[j] = op2;
-      }
-    }
   }
 
-  Path64 RectClip64::GetPath(OutPt2*& op)
+  template <typename T>
+  Path<T> RectClip<T>::GetPath(OutPt2<T>*& op)
   {
-    if (!op || op->next == op->prev) return Path64();
+      if (!op || op->next == op->prev)
+          return Path<T>();
 
-    OutPt2* op2 = op->next;
-    while (op2 && op2 != op)
-    {
-      if (IsCollinear(op2->prev->pt,
-        op2->pt, op2->next->pt))
-      {
-        op = op2->prev;
-        op2 = UnlinkOp(op2);
+      OutPt2<T>* op2 = op->next;
+      while (op2 && op2 != op) {
+          if (IsCollinear(op2->prev->pt, op2->pt, op2->next->pt)) {
+              op = op2->prev;
+              op2 = UnlinkOp(op2);
+          } else
+              op2 = op2->next;
       }
-      else
-        op2 = op2->next;
-    }
     op = op2; // needed for op cleanup
-    if (!op2) return Path64();
+    if (!op2)
+        return Path<T>();
 
-    Path64 result;
+    Path<T> result;
     result.emplace_back(op->pt);
     op2 = op->next;
     while (op2 != op)
@@ -870,9 +848,10 @@ namespace Clipper2Lib {
     return result;
   }
 
-  Paths64 RectClip64::Execute(const Paths64& paths, const std::vector<Rect64>& bounds)
+  template <typename T>
+  Paths<T> RectClip<T>::Execute(const Paths<T>& paths, const std::vector<Rect<T>>& bounds)
   {
-      Paths64 result;
+      Paths<T> result;
       if (rect_.IsEmpty())
           return result;
 
@@ -897,97 +876,100 @@ namespace Clipper2Lib {
           for (size_t j = 0; j < 4; ++j)
               TidyEdges(j, edges_[j * 2], edges_[j * 2 + 1]);
 
-          for (OutPt2*& op : results_) {
-              Path64 tmp = GetPath(op);
+          for (OutPt2<T>*& op : results_) {
+              Path<T> tmp = GetPath(op);
               if (!tmp.empty())
                   result.emplace_back(std::move(tmp));
           }
 
           // clean up after every loop
-          op_container_ = std::deque<OutPt2>();
+          op_container_ = std::deque<OutPt2<T>>();
           results_.clear();
-          for (OutPt2List& edge : edges_)
+          for (OutPt2List<T>& edge : edges_)
               edge.clear();
           start_locs_.clear();
       }
       return result;
   }
 
-  Paths64 RectClip64::Execute(const Paths64& paths)
+  template <typename T>
+  Paths<T> RectClip<T>::Execute(const Paths<T>& paths)
   {
-    Paths64 result;
-    if (rect_.IsEmpty()) return result;
+      Paths<T> result;
+      if (rect_.IsEmpty())
+          return result;
 
-    for (const Path64& path : paths)
-    {
-      if (path.size() < 3) continue;
-      path_bounds_ = GetBounds(path);
-      if (!rect_.Intersects(path_bounds_))
-        continue; // the path must be completely outside rect_
-      else if (rect_.Contains(path_bounds_))
-      {
-        // the path must be completely inside rect_
-        result.emplace_back(path);
-        continue;
+      for (const Path<T>& path : paths) {
+          if (path.size() < 3)
+              continue;
+          path_bounds_ = GetBounds(path);
+          if (!rect_.Intersects(path_bounds_))
+              continue; // the path must be completely outside rect_
+          else if (rect_.Contains(path_bounds_)) {
+              // the path must be completely inside rect_
+              result.emplace_back(path);
+              continue;
+          }
+
+          ExecuteInternal(path);
+          CheckEdges();
+          for (size_t i = 0; i < 4; ++i)
+              TidyEdges(i, edges_[i * 2], edges_[i * 2 + 1]);
+
+          for (OutPt2<T>*& op : results_) {
+              Path<T> tmp = GetPath(op);
+              if (!tmp.empty())
+                  result.emplace_back(std::move(tmp));
+          }
+
+          // clean up after every loop
+          op_container_ = std::deque<OutPt2<T>>();
+          results_.clear();
+          for (OutPt2List<T>& edge : edges_)
+              edge.clear();
+          start_locs_.clear();
       }
-
-      ExecuteInternal(path);
-      CheckEdges();
-      for (size_t i = 0; i < 4; ++i)
-        TidyEdges(i, edges_[i * 2], edges_[i * 2 + 1]);
-
-      for (OutPt2*& op :  results_)
-      {
-        Path64 tmp = GetPath(op);
-        if (!tmp.empty())
-          result.emplace_back(std::move(tmp));
-      }
-
-      //clean up after every loop
-      op_container_ = std::deque<OutPt2>();
-      results_.clear();
-      for (OutPt2List &edge : edges_) edge.clear();
-      start_locs_.clear();
-    }
     return result;
   }
 
   //------------------------------------------------------------------------------
-  // RectClipLines64
+  // RectClip<T>Lines64
   //------------------------------------------------------------------------------
 
-  Paths64 RectClipLines64::Execute(const Paths64& paths)
+  template <typename T>
+  Paths<T> RectClipLines<T>::Execute(const Paths<T>& paths)
   {
-    Paths64 result;
-    if (rect_.IsEmpty()) return result;
+      Paths<T> result;
+      if (rect_.IsEmpty())
+          return result;
 
-    for (const auto& path : paths)
-    {
-      Rect64 pathrec = GetBounds(path);
-      if (!rect_.Intersects(pathrec)) continue;
+      for (const auto& path : paths) {
+          Rect<T> pathrec = GetBounds(path);
+          if (!rect_.Intersects(pathrec))
+              continue;
 
-      ExecuteInternal(path);
+          ExecuteInternal(path);
 
-      for (OutPt2*& op : results_)
-      {
-        Path64 tmp = GetPath(op);
-        if (!tmp.empty())
-          result.emplace_back(std::move(tmp));
+          for (OutPt2<T>*& op : results_) {
+              Path<T> tmp = GetPath(op);
+              if (!tmp.empty())
+                  result.emplace_back(std::move(tmp));
+          }
+          results_.clear();
+
+          op_container_ = std::deque<OutPt2<T>>();
+          start_locs_.clear();
       }
-      results_.clear();
-
-      op_container_ = std::deque<OutPt2>();
-      start_locs_.clear();
-    }
     return result;
   }
 
-  void RectClipLines64::ExecuteInternal(const Path64& path)
+  template <typename T>
+  void RectClipLines<T>::ExecuteInternal(const Path<T>& path)
   {
     if (rect_.IsEmpty() || path.size() < 2) return;
 
     results_.clear();
-    op_container_ = std::deque<OutPt2>();
+    op_container_ = std::deque<OutPt2<T>>();
     start_locs_.clear();
 
     size_t i = 1, highI = path.size() - 1;
@@ -1014,8 +996,8 @@ namespace Clipper2Lib {
       prev = loc;
       GetNextLocation(path, loc, i, highI);
       if (i > highI) break;
-      Point64 ip, ip2;
-      Point64 prev_pt = path[static_cast<size_t>(i - 1)];
+      Point<T> ip, ip2;
+      Point<T> prev_pt = path[static_cast<size_t>(i - 1)];
 
       crossing_loc = loc;
       if (!GetIntersection(rect_as_path_,
@@ -1052,19 +1034,28 @@ namespace Clipper2Lib {
     ///////////////////////////////////////////////////
   }
 
-  Path64 RectClipLines64::GetPath(OutPt2*& op)
+  template <typename T>
+  Path<T> RectClipLines<T>::GetPath(OutPt2<T>*& op)
   {
-    Path64 result;
-    if (!op || op == op->next) return result;
-    op = op->next; // starting at path beginning
-    result.emplace_back(op->pt);
-    OutPt2 *op2 = op->next;
-    while (op2 != op)
-    {
-      result.emplace_back(op2->pt);
-      op2 = op2->next;
-    }
+      Path<T> result;
+      if (!op || op == op->next)
+          return result;
+      op = op->next; // starting at path beginning
+      result.emplace_back(op->pt);
+      OutPt2<T>* op2 = op->next;
+      while (op2 != op) {
+          result.emplace_back(op2->pt);
+          op2 = op2->next;
+      }
     return result;
   }
+
+  template class RectClip<int64_t>;
+  template class RectClipLines<int64_t>;
+
+  template class RectClip<int16_t>;
+  template class RectClipLines<int16_t>;
+  template class RectClip<int32_t>;
+  template class RectClipLines<int32_t>;
 
 } // namespace

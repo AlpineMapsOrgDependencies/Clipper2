@@ -19,72 +19,84 @@ namespace Clipper2Lib
   // Location: the order is important here, see StartLocsIsClockwise()
   enum class Location { Left, Top, Right, Bottom, Inside };
 
+  template <typename T>
   class OutPt2;
-  typedef std::vector<OutPt2*> OutPt2List;
-
-  class OutPt2 {
-  public:
-    Point64 pt;
-    size_t owner_idx = 0;
-    OutPt2List* edge = nullptr;
-    OutPt2* next = nullptr;
-    OutPt2* prev = nullptr;
-  };
 
   template <typename T>
-  struct BoundedPath {
-      Path<T> path;
-      Rect<T> bound;
-  };
+  using OutPt2List = std::vector<OutPt2<T>*>;
 
-  using BoundedPath64 = BoundedPath<int64_t>;
-  using BoundedPaths64 = std::vector<BoundedPath64>;
+  template <typename T>
+  class OutPt2 {
+  public:
+      Point<T> pt;
+      size_t owner_idx = 0;
+      OutPt2List<T>* edge = nullptr;
+      OutPt2* next = nullptr;
+      OutPt2* prev = nullptr;
+  };
 
   //------------------------------------------------------------------------------
   // RectClip64
   //------------------------------------------------------------------------------
 
-  class RectClip64 {
+  template <typename T>
+  class RectClip {
   private:
-    void ExecuteInternal(const Path64& path);
-    Path64 GetPath(OutPt2*& op);
+      void ExecuteInternal(const Path<T>& path);
+      Path<T> GetPath(OutPt2<T>*& op);
+
   protected:
-    const Rect64 rect_;
-    const Path64 rect_as_path_;
-    const Point64 rect_mp_;
-    Rect64 path_bounds_;
-    std::deque<OutPt2> op_container_;
-    OutPt2List results_;  // each path can be broken into multiples
-    OutPt2List edges_[8]; // clockwise and counter-clockwise
-    std::vector<Location> start_locs_;
-    void CheckEdges();
-    void TidyEdges(size_t idx, OutPt2List& cw, OutPt2List& ccw);
-    void GetNextLocation(const Path64& path,
-      Location& loc, size_t& i, size_t highI);
-    OutPt2* Add(Point64 pt, bool start_new = false);
-    void AddCorner(Location prev, Location curr);
-    void AddCorner(Location& loc, bool isClockwise);
+      const Rect<T> rect_;
+      const Path<T> rect_as_path_;
+      const Point<T> rect_mp_;
+      Rect<T> path_bounds_;
+      std::deque<OutPt2<T>> op_container_;
+      OutPt2List<T> results_; // each path can be broken into multiples
+      OutPt2List<T> edges_[8]; // clockwise and counter-clockwise
+      std::vector<Location> start_locs_;
+      void CheckEdges();
+      void TidyEdges(size_t idx, OutPt2List<T>& cw, OutPt2List<T>& ccw);
+      void GetNextLocation(const Path<T>& path, Location& loc, size_t& i, size_t highI);
+      OutPt2<T>* Add(Point<T> pt, bool start_new = false);
+      void AddCorner(Location prev, Location curr);
+      void AddCorner(Location& loc, bool isClockwise);
+
   public:
-    explicit RectClip64(const Rect64& rect) :
-      rect_(rect),
-      rect_as_path_(rect.AsPath()),
-      rect_mp_(rect.MidPoint()) {}
-    // Paths64 Execute(const BoundedPaths64& paths);
-    Paths64 Execute(const Paths64& paths, const std::vector<Rect64>& bounds);
-    Paths64 Execute(const Paths64& paths);
+      explicit RectClip(const Rect<T>& rect)
+          : rect_(rect)
+          , rect_as_path_(rect.AsPath())
+          , rect_mp_(rect.MidPoint())
+      {
+      }
+      Paths<T> Execute(const Paths<T>& paths, const std::vector<Rect<T>>& bounds);
+      Paths<T> Execute(const Paths<T>& paths);
   };
 
   //------------------------------------------------------------------------------
   // RectClipLines64
   //------------------------------------------------------------------------------
-
-  class RectClipLines64 : public RectClip64 {
+  template <typename T>
+  class RectClipLines : public RectClip<T> {
   private:
-    void ExecuteInternal(const Path64& path);
-    Path64 GetPath(OutPt2*& op);
+      void ExecuteInternal(const Path<T>& path);
+      Path<T> GetPath(OutPt2<T>*& op);
+
+  protected:
+      // since we are using a template we have to declare what we are using from parent class with the correct template type
+      // otherwise we would have to call RectClip<T>::var each time in the respective functions
+      using RectClip<T>::rect_;
+      using RectClip<T>::rect_as_path_;
+      using RectClip<T>::op_container_;
+      using RectClip<T>::results_;
+      using RectClip<T>::start_locs_;
+
+      using RectClip<T>::Add;
+      using RectClip<T>::GetNextLocation;
+
   public:
-    explicit RectClipLines64(const Rect64& rect) : RectClip64(rect) {};
-    Paths64 Execute(const Paths64& paths);
+      explicit RectClipLines(const Rect<T>& rect)
+          : RectClip<T>(rect) { };
+      Paths<T> Execute(const Paths<T>& paths);
   };
 
 } // Clipper2Lib namespace
