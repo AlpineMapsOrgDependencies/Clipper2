@@ -57,7 +57,8 @@ namespace Clipper2Lib
       void CheckEdges();
       void TidyEdges(size_t idx, OutPt2List<T>& cw, OutPt2List<T>& ccw);
       void GetNextLocation(const Path<T>& path, Location& loc, size_t& i, size_t highI);
-      OutPt2<T>* Add(Point<T> pt, bool start_new = false);
+      OutPt2<T>* Add(Point<T> pt);
+      OutPt2<T>* AddNew(Point<T> pt);
       void AddCorner(Location prev, Location curr);
       void AddCorner(Location& loc, bool isClockwise);
 
@@ -68,7 +69,7 @@ namespace Clipper2Lib
           , rect_mp_(rect.MidPoint())
       {
       }
-      Paths<T> Execute(const Paths<T>& paths, const std::vector<Rect<T>>& bounds);
+      void ExecuteRepeated(const Paths<T>& paths, const std::vector<Rect<T>>& bounds, Paths<T>* result);
       Paths<T> Execute(const Paths<T>& paths);
   };
 
@@ -91,11 +92,13 @@ namespace Clipper2Lib
       using RectClip<T>::start_locs_;
 
       using RectClip<T>::Add;
+      using RectClip<T>::AddNew;
       using RectClip<T>::GetNextLocation;
 
   public:
       explicit RectClipLines(const Rect<T>& rect)
           : RectClip<T>(rect) { };
+      void ExecuteRepeated(const Paths<T>& paths, Paths<T>* result);
       Paths<T> Execute(const Paths<T>& paths);
   };
 

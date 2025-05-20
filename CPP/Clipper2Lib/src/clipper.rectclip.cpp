@@ -22,7 +22,7 @@ inline bool Path1ContainsPath2(const Path<T>& path1, const Path<T>& path2)
     int io_count = 0;
     // precondition: no (significant) overlap
     for (const Point<T>& pt : path2) {
-        PointInPolygonResult pip = PointInPolygon(pt, path1);
+        const PointInPolygonResult pip = PointInPolygon(pt, path1);
         switch (pip) {
         case PointInPolygonResult::IsOutside:
             ++io_count;
@@ -79,41 +79,79 @@ inline bool IsHorizontal(const Point<T>& pt1, const Point<T>& pt2)
 template <typename T>
 bool GetSegmentIntersection(const Point<T>& p1, const Point<T>& p2, const Point<T>& p3, const Point<T>& p4, Point<T>& ip)
 {
-    double res1 = CrossProduct(p1, p3, p4);
-    double res2 = CrossProduct(p2, p3, p4);
-    if (res1 == 0)
-    {
-      ip = p1;
-      if (res2 == 0) return false; // segments are collinear
-      else if (p1 == p3 || p1 == p4) return true;
-      //else if (p2 == p3 || p2 == p4) { ip = p2; return true; }
-      else if (IsHorizontal(p3, p4)) return ((p1.x > p3.x) == (p1.x < p4.x));
-      else return ((p1.y > p3.y) == (p1.y < p4.y));
+
+    const double p31x = static_cast<double>(p3.x - p1.x);
+    const double p31y = static_cast<double>(p3.y - p1.y);
+    const double p43x = static_cast<double>(p4.x - p3.x);
+    const double p43y = static_cast<double>(p4.y - p3.y);
+    const double p32x = static_cast<double>(p3.x - p2.x);
+    const double p32y = static_cast<double>(p3.y - p2.y);
+
+    // crossproduct p1, p3, p4
+    const double res1 = (p31x * p43y - p31y * p43x);
+
+    // crossproduct p2, p3, p4
+    const double res2 = (p32x * p43y - p32y * p43x);
+
+    // const double res1 = CrossProduct(p1, p3, p4);
+    // const double res2 = CrossProduct(p2, p3, p4);
+    if (res1 == 0) {
+        ip = p1;
+        if (res2 == 0)
+            return false; // segments are collinear
+        else if (p1 == p3 || p1 == p4)
+            return true;
+        // else if (p2 == p3 || p2 == p4) { ip = p2; return true; }
+        else if (IsHorizontal(p3, p4))
+            return ((p1.x > p3.x) == (p1.x < p4.x));
+        else
+            return ((p1.y > p3.y) == (p1.y < p4.y));
     }
-    else if (res2 == 0)
-    {
-      ip = p2;
-      if (p2 == p3 || p2 == p4) return true;
-      else if (IsHorizontal(p3, p4)) return ((p2.x > p3.x) == (p2.x < p4.x));
-      else return ((p2.y > p3.y) == (p2.y < p4.y));
+
+    if (res2 == 0) {
+        ip = p2;
+        if (p2 == p3 || p2 == p4)
+            return true;
+        else if (IsHorizontal(p3, p4))
+            return ((p2.x > p3.x) == (p2.x < p4.x));
+        else
+            return ((p2.y > p3.y) == (p2.y < p4.y));
     }
     if ((res1 > 0) == (res2 > 0)) return false;
 
-    double res3 = CrossProduct(p3, p1, p2);
-    double res4 = CrossProduct(p4, p1, p2);
-    if (res3 == 0)
-    {
-      ip = p3;
-      if (p3 == p1 || p3 == p2) return true;
-      else if (IsHorizontal(p1, p2)) return ((p3.x > p1.x) == (p3.x < p2.x));
-      else return ((p3.y > p1.y) == (p3.y < p2.y));
+    const double p13x = static_cast<double>(p1.x - p3.x);
+    const double p13y = static_cast<double>(p1.y - p3.y);
+    const double p21x = static_cast<double>(p2.x - p1.x);
+    const double p21y = static_cast<double>(p2.y - p1.y);
+
+    // crossproduct p3, p1, p2
+    const double res3 = (p13x * p21y - p13y * p21x);
+
+    // const double res3 = CrossProduct(p3, p1, p2);
+    // const double res4 = CrossProduct(p4, p1, p2);
+    if (res3 == 0) {
+        ip = p3;
+        if (p3 == p1 || p3 == p2)
+            return true;
+        else if (IsHorizontal(p1, p2))
+            return ((p3.x > p1.x) == (p3.x < p2.x));
+        else
+            return ((p3.y > p1.y) == (p3.y < p2.y));
     }
-    else if (res4 == 0)
-    {
-      ip = p4;
-      if (p4 == p1 || p4 == p2) return true;
-      else if (IsHorizontal(p1, p2)) return ((p4.x > p1.x) == (p4.x < p2.x));
-      else return ((p4.y > p1.y) == (p4.y < p2.y));
+
+    const double p14x = static_cast<double>(p1.x - p4.x);
+    const double p14y = static_cast<double>(p1.y - p4.y);
+    // crossproduct p4, p1, p2
+    const double res4 = (p14x * p21y - p14y * p21x);
+
+    if (res4 == 0) {
+        ip = p4;
+        if (p4 == p1 || p4 == p2)
+            return true;
+        else if (IsHorizontal(p1, p2))
+            return ((p4.x > p1.x) == (p4.x < p2.x));
+        else
+            return ((p4.y > p1.y) == (p4.y < p2.y));
     }
     if ((res3 > 0) == (res4 > 0)) return false;
 
@@ -326,7 +364,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
   //----------------------------------------------------------------------------
 
   template <typename T>
-  OutPt2<T>* RectClip<T>::Add(Point<T> pt, bool start_new)
+  OutPt2<T>* RectClip<T>::Add(Point<T> pt)
   {
     // this method is only called by InternalExecute.
     // Later splitting & rejoining won't create additional op's,
@@ -334,29 +372,46 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
     size_t curr_idx = results_.size();
     // TODO change size_t to uint
     OutPt2<T>* result;
-    if (curr_idx == 0 || start_new)
-    {
+    if (curr_idx == 0) {
         result = &op_container_.emplace_back(OutPt2<T>());
         result->pt = pt;
         result->next = result;
         result->prev = result;
         results_.emplace_back(result);
-    }
-    else
-    {
-      --curr_idx;
-      OutPt2<T>* prevOp = results_[curr_idx];
-      if (prevOp->pt == pt)  return prevOp;
-      result = &op_container_.emplace_back(OutPt2<T>());
-      result->owner_idx = curr_idx;
-      result->pt = pt;
-      result->next = prevOp->next;
-      prevOp->next->prev = result;
-      prevOp->next = result;
-      result->prev = prevOp;
-      results_[curr_idx] = result;
+    } else {
+        --curr_idx;
+        OutPt2<T>* prevOp = results_[curr_idx];
+        if (prevOp->pt == pt)
+            return prevOp;
+        result = &op_container_.emplace_back(OutPt2<T>());
+        result->owner_idx = curr_idx;
+        result->pt = pt;
+        result->next = prevOp->next;
+        prevOp->next->prev = result;
+        prevOp->next = result;
+        result->prev = prevOp;
+        results_[curr_idx] = result;
     }
     return result;
+  }
+
+  /**
+   * previously a new flag was added to the Add() method -> by separating into two different functions we save a bit of computation time
+   */
+  template <typename T>
+  OutPt2<T>* RectClip<T>::AddNew(Point<T> pt)
+  {
+      // this method is only called by InternalExecute.
+      // Later splitting & rejoining won't create additional op's,
+      // though they will change the (non-storage) results_ count.
+
+      OutPt2<T>* result = &op_container_.emplace_back(OutPt2<T>());
+      result->pt = pt;
+      result->next = result;
+      result->prev = result;
+      results_.emplace_back(result);
+
+      return result;
   }
 
   template <typename T>
@@ -849,14 +904,15 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
   }
 
   template <typename T>
-  Paths<T> RectClip<T>::Execute(const Paths<T>& paths, const std::vector<Rect<T>>& bounds)
+  void RectClip<T>::ExecuteRepeated(const Paths<T>& paths, const std::vector<Rect<T>>& bounds, Paths<T>* result)
   {
-      Paths<T> result;
+      result->clear();
+
       if (rect_.IsEmpty())
-          return result;
+          return;
 
       if (paths.size() != bounds.size()) // should not happen
-          return result;
+          return;
 
       for (size_t i = 0; i < paths.size(); i++) {
 
@@ -866,7 +922,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
               continue; // the path must be completely outside rect_
           else if (rect_.Contains(bounds[i])) {
               // the path must be completely inside rect_
-              result.emplace_back(paths[i]);
+              result->emplace_back(paths[i]);
               continue;
           }
           path_bounds_ = bounds[i];
@@ -879,17 +935,16 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
           for (OutPt2<T>*& op : results_) {
               Path<T> tmp = GetPath(op);
               if (!tmp.empty())
-                  result.emplace_back(std::move(tmp));
+                  result->emplace_back(std::move(tmp));
           }
 
           // clean up after every loop
-          op_container_ = std::deque<OutPt2<T>>();
+          op_container_.clear();
           results_.clear();
           for (OutPt2List<T>& edge : edges_)
               edge.clear();
           start_locs_.clear();
       }
-      return result;
   }
 
   template <typename T>
@@ -923,7 +978,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
           }
 
           // clean up after every loop
-          op_container_ = std::deque<OutPt2<T>>();
+          op_container_.clear();
           results_.clear();
           for (OutPt2List<T>& edge : edges_)
               edge.clear();
@@ -935,6 +990,33 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
   //------------------------------------------------------------------------------
   // RectClip<T>Lines64
   //------------------------------------------------------------------------------
+
+  template <typename T>
+  void RectClipLines<T>::ExecuteRepeated(const Paths<T>& paths, Paths<T>* result)
+  {
+      result->clear();
+
+      if (rect_.IsEmpty())
+          return;
+
+      for (const auto& path : paths) {
+          // Rect<T> pathrec = GetBounds(path); // bounds should already be calculated outside
+          // if (!rect_.Intersects(pathrec))
+          //     continue;
+
+          ExecuteInternal(path);
+
+          for (OutPt2<T>*& op : results_) {
+              Path<T> tmp = GetPath(op);
+              if (!tmp.empty())
+                  result->emplace_back(std::move(tmp));
+          }
+          results_.clear();
+
+          op_container_.clear();
+          start_locs_.clear();
+      }
+  }
 
   template <typename T>
   Paths<T> RectClipLines<T>::Execute(const Paths<T>& paths)
@@ -957,7 +1039,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
           }
           results_.clear();
 
-          op_container_ = std::deque<OutPt2<T>>();
+          op_container_.clear();
           start_locs_.clear();
       }
     return result;
@@ -969,7 +1051,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
     if (rect_.IsEmpty() || path.size() < 2) return;
 
     results_.clear();
-    op_container_ = std::deque<OutPt2<T>>();
+    op_container_.clear();
     start_locs_.clear();
 
     size_t i = 1, highI = path.size() - 1;
@@ -1014,7 +1096,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
 
       if (loc == Location::Inside) // path must be entering rect
       {
-        Add(ip, true);
+          AddNew(ip);
       }
       else if (prev != Location::Inside)
       {
@@ -1023,7 +1105,7 @@ inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Po
         crossing_loc = prev;
         GetIntersection(rect_as_path_,
           prev_pt, path[i], crossing_loc, ip2);
-        Add(ip2, true);
+        AddNew(ip2);
         Add(ip);
       }
       else // path must be exiting rect

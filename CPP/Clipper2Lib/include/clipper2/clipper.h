@@ -159,6 +159,21 @@ namespace Clipper2Lib {
   }
 
   template <typename T>
+  inline void TranslatePathInPlace(Path<T>* path, T dx, T dy)
+  {
+      for_each(path->begin(), path->end(), [dx, dy](auto& pt) {
+          pt.x += dx;
+          pt.y += dy;
+      });
+  }
+
+  inline void TranslatePathInPlace(Path<int16_t>* path, int16_t dx, int16_t dy) { TranslatePathInPlace<int16_t>(path, dx, dy); }
+
+  inline void TranslatePathInPlace(Path64* path, int64_t dx, int64_t dy) { TranslatePathInPlace<int64_t>(path, dx, dy); }
+
+  inline void TranslatePathInPlace(PathD* path, double dx, double dy) { TranslatePathInPlace<double>(path, dx, dy); }
+
+  template <typename T>
   inline Path<T> TranslatePath(const Path<T>& path, T dx, T dy)
   {
     Path<T> result;
@@ -179,6 +194,18 @@ namespace Clipper2Lib {
   {
     return TranslatePath<double>(path, dx, dy);
   }
+
+  template <typename T>
+  inline void TranslatePathsInPlace(Paths<T>* paths, T dx, T dy)
+  {
+      for_each(paths->begin(), paths->end(), [dx, dy](auto& path) { TranslatePathInPlace(&path, dx, dy); });
+  }
+
+  inline void TranslatePathsInPlace(Paths<int16_t>* paths, int16_t dx, int16_t dy) { TranslatePathsInPlace<int16_t>(paths, dx, dy); }
+
+  inline void TranslatePathsInPlace(Paths64* paths, int64_t dx, int64_t dy) { TranslatePathsInPlace<int64_t>(paths, dx, dy); }
+
+  inline void TranslatePathsInPlace(PathsD* paths, double dx, double dy) { TranslatePathsInPlace<double>(paths, dx, dy); }
 
   template <typename T>
   inline Paths<T> TranslatePaths(const Paths<T>& paths, T dx, T dy)

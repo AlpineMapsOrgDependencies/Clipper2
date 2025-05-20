@@ -762,7 +762,6 @@ namespace Clipper2Lib
     return ProductsAreEqual(a, b, c, d);
   }
 
-
   template <typename T>
   inline double CrossProduct(const Point<T>& pt1, const Point<T>& pt2, const Point<T>& pt3) {
     return (static_cast<double>(pt2.x - pt1.x) * static_cast<double>(pt3.y -
