@@ -909,22 +909,54 @@ namespace Clipper2Lib
     const Point<T>& ln2a, const Point<T>& ln2b, Point<T>& ip)
   {
     // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-    double dx1 = static_cast<double>(ln1b.x - ln1a.x);
-    double dy1 = static_cast<double>(ln1b.y - ln1a.y);
-    double dx2 = static_cast<double>(ln2b.x - ln2a.x);
-    double dy2 = static_cast<double>(ln2b.y - ln2a.y);
 
-    double det = dy1 * dx2 - dy2 * dx1;
-    if (det == 0.0) return false;
-    double t = ((ln1a.x - ln2a.x) * dy2 - (ln1a.y - ln2a.y) * dx2) / det;
-    if (t <= 0.0) ip = ln1a;
-    else if (t >= 1.0) ip = ln1b;
-    else
-    {
-      ip.x = static_cast<T>(ln1a.x + t * dx1);
-      ip.y = static_cast<T>(ln1a.y + t * dy1);
-  }
-    return true;
+    if constexpr (std::is_same_v<T, double> || std::is_same_v<T, int64_t>) {
+        double dx1 = static_cast<double>(ln1b.x - ln1a.x);
+        double dy1 = static_cast<double>(ln1b.y - ln1a.y);
+        double dx2 = static_cast<double>(ln2b.x - ln2a.x);
+        double dy2 = static_cast<double>(ln2b.y - ln2a.y);
+
+        double det = dy1 * dx2 - dy2 * dx1;
+        if (det == 0.0)
+            return false;
+        double t = ((ln1a.x - ln2a.x) * dy2 - (ln1a.y - ln2a.y) * dx2) / det;
+        if (t <= 0.0)
+            ip = ln1a;
+        else if (t >= 1.0)
+            ip = ln1b;
+        else {
+            ip.x = static_cast<T>(ln1a.x + t * dx1);
+            ip.y = static_cast<T>(ln1a.y + t * dy1);
+        }
+        return true;
+    } else {
+        static_assert(
+            std::disjunction<std::is_same<T, int8_t>, std::is_same<T, int16_t>, std::is_same<T, int32_t>>::value, "logic must be checked for other types.");
+        // this won't work for unsigned types.
+        // type promotion to int at work for int8 and 16
+        // there will be issues for very large integers (maybe overflows), for int64 we definitely need a cast to double for t
+
+        // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+        const auto dx1 = ln1b.x - ln1a.x;
+        const auto dy1 = ln1b.y - ln1a.y;
+        const auto dx2 = ln2b.x - ln2a.x;
+        const auto dy2 = ln2b.y - ln2a.y;
+
+        const auto det = dy1 * dx2 - dy2 * dx1;
+        if (det == 0)
+            return false;
+
+        const auto t = double((ln1a.x - ln2a.x) * dy2 - (ln1a.y - ln2a.y) * dx2) / double(det);
+        if (t <= 0.0)
+            ip = ln1a;
+        else if (t >= 1.0)
+            ip = ln1b;
+        else {
+            ip.x = static_cast<T>(ln1a.x + t * dx1);
+            ip.y = static_cast<T>(ln1a.y + t * dy1);
+        }
+        return true;
+    }
   }
 #endif
 

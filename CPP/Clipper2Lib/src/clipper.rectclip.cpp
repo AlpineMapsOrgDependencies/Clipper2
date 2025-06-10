@@ -79,84 +79,173 @@ inline bool IsHorizontal(const Point<T>& pt1, const Point<T>& pt2)
 template <typename T>
 bool GetSegmentIntersection(const Point<T>& p1, const Point<T>& p2, const Point<T>& p3, const Point<T>& p4, Point<T>& ip)
 {
+    if constexpr (std::is_same_v<T, double> || std::is_same_v<T, int64_t>) {
+        const double p31x = static_cast<double>(p3.x - p1.x);
+        const double p31y = static_cast<double>(p3.y - p1.y);
+        const double p43x = static_cast<double>(p4.x - p3.x);
+        const double p43y = static_cast<double>(p4.y - p3.y);
+        const double p32x = static_cast<double>(p3.x - p2.x);
+        const double p32y = static_cast<double>(p3.y - p2.y);
 
-    const double p31x = static_cast<double>(p3.x - p1.x);
-    const double p31y = static_cast<double>(p3.y - p1.y);
-    const double p43x = static_cast<double>(p4.x - p3.x);
-    const double p43y = static_cast<double>(p4.y - p3.y);
-    const double p32x = static_cast<double>(p3.x - p2.x);
-    const double p32y = static_cast<double>(p3.y - p2.y);
+        // crossproduct p1, p3, p4
+        const double res1 = (p31x * p43y - p31y * p43x);
 
-    // crossproduct p1, p3, p4
-    const double res1 = (p31x * p43y - p31y * p43x);
+        // crossproduct p2, p3, p4
+        const double res2 = (p32x * p43y - p32y * p43x);
 
-    // crossproduct p2, p3, p4
-    const double res2 = (p32x * p43y - p32y * p43x);
+        // const double res1 = CrossProduct(p1, p3, p4);
+        // const double res2 = CrossProduct(p2, p3, p4);
+        if (res1 == 0) {
+            ip = p1;
+            if (res2 == 0)
+                return false; // segments are collinear
+            else if (p1 == p3 || p1 == p4)
+                return true;
+            // else if (p2 == p3 || p2 == p4) { ip = p2; return true; }
+            else if (IsHorizontal(p3, p4))
+                return ((p1.x > p3.x) == (p1.x < p4.x));
+            else
+                return ((p1.y > p3.y) == (p1.y < p4.y));
+        }
 
-    // const double res1 = CrossProduct(p1, p3, p4);
-    // const double res2 = CrossProduct(p2, p3, p4);
-    if (res1 == 0) {
-        ip = p1;
-        if (res2 == 0)
-            return false; // segments are collinear
-        else if (p1 == p3 || p1 == p4)
-            return true;
-        // else if (p2 == p3 || p2 == p4) { ip = p2; return true; }
-        else if (IsHorizontal(p3, p4))
-            return ((p1.x > p3.x) == (p1.x < p4.x));
-        else
-            return ((p1.y > p3.y) == (p1.y < p4.y));
+        if (res2 == 0) {
+            ip = p2;
+            if (p2 == p3 || p2 == p4)
+                return true;
+            else if (IsHorizontal(p3, p4))
+                return ((p2.x > p3.x) == (p2.x < p4.x));
+            else
+                return ((p2.y > p3.y) == (p2.y < p4.y));
+        }
+        if ((res1 > 0) == (res2 > 0))
+            return false;
+
+        const double p13x = static_cast<double>(p1.x - p3.x);
+        const double p13y = static_cast<double>(p1.y - p3.y);
+        const double p21x = static_cast<double>(p2.x - p1.x);
+        const double p21y = static_cast<double>(p2.y - p1.y);
+
+        // crossproduct p3, p1, p2
+        const double res3 = (p13x * p21y - p13y * p21x);
+
+        // const double res3 = CrossProduct(p3, p1, p2);
+        // const double res4 = CrossProduct(p4, p1, p2);
+        if (res3 == 0) {
+            ip = p3;
+            if (p3 == p1 || p3 == p2)
+                return true;
+            else if (IsHorizontal(p1, p2))
+                return ((p3.x > p1.x) == (p3.x < p2.x));
+            else
+                return ((p3.y > p1.y) == (p3.y < p2.y));
+        }
+
+        const double p14x = static_cast<double>(p1.x - p4.x);
+        const double p14y = static_cast<double>(p1.y - p4.y);
+        // crossproduct p4, p1, p2
+        const double res4 = (p14x * p21y - p14y * p21x);
+
+        if (res4 == 0) {
+            ip = p4;
+            if (p4 == p1 || p4 == p2)
+                return true;
+            else if (IsHorizontal(p1, p2))
+                return ((p4.x > p1.x) == (p4.x < p2.x));
+            else
+                return ((p4.y > p1.y) == (p4.y < p2.y));
+        }
+        if ((res3 > 0) == (res4 > 0))
+            return false;
+
+        // segments must intersect to get here
+        return GetSegmentIntersectPt(p1, p2, p3, p4, ip);
+
+    } else {
+        static_assert(std::disjunction<std::is_same<T, int8_t>, std::is_same<T, int16_t>, std::is_same<T, int32_t>, std::is_same<T, int64_t>>::value,
+            "logic must be checked for other types.");
+        // i deleted several casts to double, check the git log. this won't work for unsigned types.
+        // type promotion to int at work for int8 and 16
+
+        const auto p31x = p3.x - p1.x;
+        const auto p31y = p3.y - p1.y;
+        const auto p43x = p4.x - p3.x;
+        const auto p43y = p4.y - p3.y;
+        const auto p32x = p3.x - p2.x;
+        const auto p32y = p3.y - p2.y;
+
+        // crossproduct p1, p3, p4
+        const auto res1 = (p31x * p43y - p31y * p43x);
+
+        // crossproduct p2, p3, p4
+        const auto res2 = (p32x * p43y - p32y * p43x);
+
+        // const double res1 = CrossProduct(p1, p3, p4);
+        // const double res2 = CrossProduct(p2, p3, p4);
+        if (res1 == 0) {
+            ip = p1;
+            if (res2 == 0)
+                return false; // segments are collinear
+            else if (p1 == p3 || p1 == p4)
+                return true;
+            // else if (p2 == p3 || p2 == p4) { ip = p2; return true; }
+            else if (IsHorizontal(p3, p4))
+                return ((p1.x > p3.x) == (p1.x < p4.x));
+            else
+                return ((p1.y > p3.y) == (p1.y < p4.y));
+        }
+
+        if (res2 == 0) {
+            ip = p2;
+            if (p2 == p3 || p2 == p4)
+                return true;
+            else if (IsHorizontal(p3, p4))
+                return ((p2.x > p3.x) == (p2.x < p4.x));
+            else
+                return ((p2.y > p3.y) == (p2.y < p4.y));
+        }
+        if ((res1 > 0) == (res2 > 0))
+            return false;
+
+        const auto p13x = p1.x - p3.x;
+        const auto p13y = p1.y - p3.y;
+        const auto p21x = p2.x - p1.x;
+        const auto p21y = p2.y - p1.y;
+
+        // crossproduct p3, p1, p2
+        const auto res3 = (p13x * p21y - p13y * p21x);
+
+        // const double res3 = CrossProduct(p3, p1, p2);
+        // const double res4 = CrossProduct(p4, p1, p2);
+        if (res3 == 0) {
+            ip = p3;
+            if (p3 == p1 || p3 == p2)
+                return true;
+            else if (IsHorizontal(p1, p2))
+                return ((p3.x > p1.x) == (p3.x < p2.x));
+            else
+                return ((p3.y > p1.y) == (p3.y < p2.y));
+        }
+
+        const auto p14x = p1.x - p4.x;
+        const auto p14y = p1.y - p4.y;
+        // crossproduct p4, p1, p2
+        const auto res4 = (p14x * p21y - p14y * p21x);
+
+        if (res4 == 0) {
+            ip = p4;
+            if (p4 == p1 || p4 == p2)
+                return true;
+            else if (IsHorizontal(p1, p2))
+                return ((p4.x > p1.x) == (p4.x < p2.x));
+            else
+                return ((p4.y > p1.y) == (p4.y < p2.y));
+        }
+        if ((res3 > 0) == (res4 > 0))
+            return false;
+
+        // segments must intersect to get here
+        return GetSegmentIntersectPt(p1, p2, p3, p4, ip);
     }
-
-    if (res2 == 0) {
-        ip = p2;
-        if (p2 == p3 || p2 == p4)
-            return true;
-        else if (IsHorizontal(p3, p4))
-            return ((p2.x > p3.x) == (p2.x < p4.x));
-        else
-            return ((p2.y > p3.y) == (p2.y < p4.y));
-    }
-    if ((res1 > 0) == (res2 > 0)) return false;
-
-    const double p13x = static_cast<double>(p1.x - p3.x);
-    const double p13y = static_cast<double>(p1.y - p3.y);
-    const double p21x = static_cast<double>(p2.x - p1.x);
-    const double p21y = static_cast<double>(p2.y - p1.y);
-
-    // crossproduct p3, p1, p2
-    const double res3 = (p13x * p21y - p13y * p21x);
-
-    // const double res3 = CrossProduct(p3, p1, p2);
-    // const double res4 = CrossProduct(p4, p1, p2);
-    if (res3 == 0) {
-        ip = p3;
-        if (p3 == p1 || p3 == p2)
-            return true;
-        else if (IsHorizontal(p1, p2))
-            return ((p3.x > p1.x) == (p3.x < p2.x));
-        else
-            return ((p3.y > p1.y) == (p3.y < p2.y));
-    }
-
-    const double p14x = static_cast<double>(p1.x - p4.x);
-    const double p14y = static_cast<double>(p1.y - p4.y);
-    // crossproduct p4, p1, p2
-    const double res4 = (p14x * p21y - p14y * p21x);
-
-    if (res4 == 0) {
-        ip = p4;
-        if (p4 == p1 || p4 == p2)
-            return true;
-        else if (IsHorizontal(p1, p2))
-            return ((p4.x > p1.x) == (p4.x < p2.x));
-        else
-            return ((p4.y > p1.y) == (p4.y < p2.y));
-    }
-    if ((res3 > 0) == (res4 > 0)) return false;
-
-    // segments must intersect to get here
-    return GetSegmentIntersectPt(p1, p2, p3, p4, ip);
 }
 template <typename T>
 inline bool GetIntersection(const Path<T>& rectPath, const Point<T>& p, const Point<T>& p2, Location& loc, Point<T>& ip)
